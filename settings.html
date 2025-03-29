@@ -1,0 +1,59 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>KniteCrawler Settings</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #1a1a1a; color: #00ff00; font-family: 'Courier New', monospace; }
+        .navbar { background: #0d0d0d; }
+        .navbar-brand, .nav-link { color: #00ff00 !important; }
+        .form-control { background: #2a2a2a; color: #00ff00; border: 1px solid #00ff00; }
+        .btn-primary { background: #00ff00; border: none; color: #000; }
+        .btn-primary:hover { background: #00cc00; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="/">KniteCrawler</a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="/">Dashboard</a>
+                <a class="nav-link" href="/crawl_history">Crawl History</a>
+                <a class="nav-link" href="/readme">README</a>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        <h1>Settings</h1>
+        <form method="POST">
+            <h3>Reddit</h3>
+            <div class="mb-3"><label class="form-label">Client ID</label><input type="text" name="reddit_client_id" class="form-control" value="{{ settings.reddit_client_id }}"></div>
+            <div class="mb-3"><label class="form-label">Client Secret</label><input type="text" name="reddit_client_secret" class="form-control" value="{{ settings.reddit_client_secret }}"></div>
+            <div class="mb-3"><label class="form-label">User Agent</label><input type="text" name="reddit_user_agent" class="form-control" value="{{ settings.reddit_user_agent }}"></div>
+            <h3>Telegram</h3>
+            <div class="mb-3"><label class="form-label">API ID</label><input type="text" name="telegram_api_id" class="form-control" value="{{ settings.telegram_api_id }}"></div>
+            <div class="mb-3"><label class="form-label">API Hash</label><input type="text" name="telegram_api_hash" class="form-control" value="{{ settings.telegram_api_hash }}"></div>
+            <div class="mb-3"><label class="form-label">Phone Number</label><input type="text" name="telegram_phone" class="form-control" value="{{ settings.telegram_phone }}"></div>
+            <div class="mb-3"><label class="form-label">Channel</label><input type="text" name="telegram_channel" class="form-control" value="{{ settings.telegram_channel }}"></div>
+            <h3>Discord</h3>
+            <div class="mb-3"><label class="form-label">Bot Token</label><input type="text" name="discord_token" class="form-control" value="{{ settings.discord_token }}"></div>
+            <h3>General</h3>
+            <div class="mb-3"><label class="form-label">Dark Web URLs</label><input type="text" name="dark_web_urls" class="form-control" value="{{ settings.dark_web_urls }}"></div>
+            <div class="mb-3"><label class="form-label">4chan URL</label><input type="text" name="4chan_url" class="form-control" value="{{ settings['4chan_url'] }}"></div>
+            <div class="mb-3"><label class="form-label">X URL</label><input type="text" name="x_url" class="form-control" value="{{ settings.x_url }}"></div>
+            <div class="mb-3"><label class="form-label">Pastebin URL</label><input type="text" name="pastebin_url" class="form-control" value="{{ settings.pastebin_url }}"></div>
+            <div class="mb-3"><label class="form-label">GitHub URL</label><input type="text" name="github_url" class="form-control" value="{{ settings.github_url }}"></div>
+            <div class="mb-3"><label class="form-label">XSS.is URL</label><input type="text" name="xss_url" class="form-control" value="{{ settings.xss_url }}"></div>
+            <div class="mb-3"><label class="form-label">Exploit.in URL</label><input type="text" name="exploit_url" class="form-control" value="{{ settings.exploit_url }}"></div>
+            <div class="mb-3"><label class="form-label">Nulled.to URL</label><input type="text" name="nulled_url" class="form-control" value="{{ settings.nulled_url }}"></div>
+            <div class="mb-3"><label class="form-label">Max Depth</label><input type="number" name="max_depth" class="form-control" value="{{ settings.max_depth }}"></div>
+            <div class="mb-3"><label class="form-label">Max URLs</label><input type="number" name="max_urls" class="form-control" value="{{ settings.max_urls }}"></div>
+            <div class="mb-3"><label class="form-label">Threads</label><input type="number" name="threads" class="form-control" value="{{ settings.threads }}"></div>
+            <div class="mb-3"><label class="form-label">Proxy List</label><input type="text" name="proxy_list" class="form-control" value="{{ settings.proxy_list }}"></div>
+            <div class="mb-3"><label class="form-label">2Captcha API Key</label><input type="text" name="captcha_key" class="form-control" value="{{ settings.captcha_key }}"></div>
+            <button type="submit" class="btn btn-primary">> Save Config</button>
+        </form>
+    </div>
+</body>
+</html>

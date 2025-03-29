@@ -1,0 +1,214 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>KniteCrawler Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <style>
+        body { background: #1a1a1a; color: #00ff00; font-family: 'Courier New', monospace; }
+        .navbar { background: #0d0d0d; }
+        .navbar-brand, .nav-link { color: #00ff00 !important; }
+        .card { background: #2a2a2a; border: 1px solid #00ff00; }
+        .card-body { color: #00ff00; }
+        .btn-primary { background: #00ff00; border: none; color: #000; }
+        .btn-primary:hover { background: #00cc00; }
+        .search-container { margin: 20px 0; }
+        .search-bar { width: 70%; padding: 10px; background: #2a2a2a; color: #00ff00; border: 1px solid #00ff00; }
+        .filter-container { margin-bottom: 20px; }
+        .filter-select { background: #2a2a2a; color: #00ff00; border: 1px solid #00ff00; padding: 5px; }
+        .result-item { border-bottom: 1px solid #00ff00; padding: 15px 0; }
+        .result-title { color: #00ff00; font-size: 18px; }
+        .result-url { color: #00cc00; font-size: 14px; }
+        .result-snippet { color: #00ff00; font-size: 14px; }
+        .highlight { background: #ff00ff; color: #000; padding: 2px; }
+        .score { color: #ff00ff; font-weight: bold; }
+        .activity-container { margin-top: 20px; }
+        .activity-list { list-style-type: none; padding: 0; }
+        .activity-item { padding: 5px; background: #2a2a2a; margin-bottom: 5px; border: 1px solid #00ff00; }
+        .logs-container { margin-top: 20px; max-height: 200px; overflow-y: auto; background: #2a2a2a; border: 1px solid #00ff00; padding: 10px; }
+        .log-item { margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="/">KniteCrawler</a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="/settings">Settings</a>
+                <a class="nav-link" href="/crawl_history">Crawl History</a>
+                <a class="nav-link" href="/readme">README</a>
+                <a class="nav-link" href="/export">Export CSV</a>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        <h1>Dashboard</h1>
+        <div class="row">
+            <div class="col-md-4"><div class="card"><div class="card-body"><h5>Total Findings</h5><p>{{ total_findings }}</p></div></div></div>
+            <div class="col-md-4"><div class="card"><div class="card-body"><h5>Platforms Monitored</h5><p>{{ platforms }}</p></div></div></div>
+            <div class="col-md-4"><div class="card"><div class="card-body"><h5>Recent Alerts (24h)</h5><p>{{ recent_alerts }}</p></div></div></div>
+        </div>
+        <div class="row mt-4">
+            <div class="col-md-6"><canvas id="platformChart"></canvas></div>
+            <div class="col-md-6"><canvas id="timeChart"></canvas></div>
+        </div>
+        <div class="mt-4">
+            <h2>Add Target</h2>
+            <form method="POST" action="/add_term" class="mb-3">
+                <div class="input-group">
+                    <input type="text" name="term" class="form-control" placeholder="> Enter target" style="background: #2a2a2a; color: #00ff00; border: 1px solid #00ff00;" required>
+                    <button type="submit" class="btn btn-primary">> Deploy</button>
+                </div>
+            </form>
+            <h2>Active Targets</h2>
+            <ul class="list-group mb-3">
+                {% for term in terms %}
+                    <li class="list-group-item" style="background: #2a2a2a; border: 1px solid #00ff00;">{{ term }}</li>
+                {% endfor %}
+            </ul>
+            <h2>Running Activity</h2>
+            <div class="activity-container">
+                <ul id="activityList" class="activity-list"></ul>
+            </div>
+            <h2>Current Activity Status</h2>
+            <div class="logs-container" id="logsList"></div>
+            <h2>Intel Feed</h2>
+            <div class="search-container">
+                <input type="text" id="searchInput" class="search-bar" placeholder="> Search intel...">
+            </div>
+            <div class="filter-container">
+                <select id="platformFilter" class="filter-select">
+                    <option value="">All Origins</option>
+                    {% for platform in platforms_list %}
+                        <option value="{{ platform }}">{{ platform }}</option>
+                    {% endfor %}
+                </select>
+                <select id="sentimentFilter" class="filter-select">
+                    <option value="">All Sentiments</option>
+                    {% for sentiment in sentiments_list %}
+                        <option value="{{ sentiment }}">{{ sentiment }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div id="results">
+                {% for result in results %}
+                    <div class="result-item" data-term="{{ result[0] }}" data-platform="{{ result[1] }}" data-sentiment="{{ result[4] }}">
+                        <div class="result-title">{{ result[0] }} - {{ result[1] }} ({{ result[6] }}) <span class="score">[Score: N/A]</span></div>
+                        <div class="result-url"><a href="{{ result[2] }}">{{ result[2] }}</a></div>
+                        <div class="result-snippet">{{ result[3]|replace(result[0], '<span class="highlight">' + result[0] + '</span>')|safe }} | Sentiment: {{ result[4] }} | Summary: {{ result[5] }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <script>
+        const socket = io();
+        socket.on('new_result', function(data) {
+            const resultsDiv = document.getElementById('results');
+            const item = document.createElement('div');
+            item.className = 'result-item';
+            item.dataset.term = data.term;
+            item.dataset.platform = data.platform;
+            item.dataset.sentiment = data.sentiment;
+            item.innerHTML = `
+                <div class="result-title">${data.term} - ${data.platform} (${data.timestamp}) <span class="score">[Score: ${data.score || 'N/A'}]</span></div>
+                <div class="result-url"><a href="${data.url}">${data.url}</a></div>
+                <div class="result-snippet">${data.content.replace(data.term, '<span class="highlight">' + data.term + '</span>')} | Sentiment: ${data.sentiment} | Summary: ${data.summary}</div>
+            `;
+            resultsDiv.insertBefore(item, resultsDiv.firstChild);
+            filterResults();
+
+            if (Notification.permission === "granted") {
+                new Notification(`New Intel: ${data.term}`, { body: `${data.platform}: ${data.summary} (Score: ${data.score || 'N/A'})`, icon: 'https://via.placeholder.com/32x32.png?text=KC' });
+            } else if (Notification.permission !== "denied") {
+                Notification.requestPermission().then(permission => {
+                    if (permission === "granted") {
+                        new Notification(`New Intel: ${data.term}`, { body: `${data.platform}: ${data.summary} (Score: ${data.score || 'N/A'})`, icon: 'https://via.placeholder.com/32x32.png?text=KC' });
+                    }
+                });
+            }
+        });
+
+        new Chart(document.getElementById('platformChart').getContext('2d'), {
+            type: 'bar',
+            data: { labels: {{ platforms_count.keys()|list|tojson }}, datasets: [{ label: 'Findings per Origin', data: {{ platforms_count.values()|list|tojson }}, backgroundColor: '#00ff00', borderColor: '#00cc00', borderWidth: 1 }] },
+            options: { scales: { y: { beginAtZero: true, ticks: { color: '#00ff00' } }, x: { ticks: { color: '#00ff00' } } }, plugins: { legend: { labels: { color: '#00ff00' } } } }
+        });
+        new Chart(document.getElementById('timeChart').getContext('2d'), {
+            type: 'line',
+            data: { labels: {{ time_series.keys()|list|tojson }}, datasets: [{ label: 'Intel Over Time', data: {{ time_series.values()|list|tojson }}, fill: false, borderColor: '#00ff00', tension: 0.1 }] },
+            options: { scales: { y: { ticks: { color: '#00ff00' } }, x: { ticks: { color: '#00ff00' } } }, plugins: { legend: { labels: { color: '#00ff00' } } } }
+        });
+
+        function filterResults() {
+            const searchValue = document.getElementById('searchInput').value.toLowerCase();
+            const platformFilter = document.getElementById('platformFilter').value;
+            const sentimentFilter = document.getElementById('sentimentFilter').value;
+            const results = document.getElementsByClassName('result-item');
+
+            for (let item of results) {
+                const term = item.dataset.term.toLowerCase();
+                const platform = item.dataset.platform;
+                const sentiment = item.dataset.sentiment;
+                const content = item.querySelector('.result-snippet').textContent.toLowerCase();
+                const matchesSearch = term.includes(searchValue) || content.includes(searchValue);
+                const matchesPlatform = !platformFilter || platform === platformFilter;
+                const matchesSentiment = !sentimentFilter || sentiment === sentimentFilter;
+
+                item.style.display = matchesSearch && matchesPlatform && matchesSentiment ? '' : 'none';
+            }
+        }
+
+        document.getElementById('searchInput').addEventListener('input', filterResults);
+        document.getElementById('platformFilter').addEventListener('change', filterResults);
+        document.getElementById('sentimentFilter').addEventListener('change', filterResults);
+
+        function updateActivity() {
+            fetch('/active_trackers')
+                .then(response => response.json())
+                .then(data => {
+                    const activityList = document.getElementById('activityList');
+                    activityList.innerHTML = '';
+                    if (Object.keys(data).length === 0) {
+                        const li = document.createElement('li');
+                        li.className = 'activity-item';
+                        li.textContent = 'No active trackers running.';
+                        activityList.appendChild(li);
+                    } else {
+                        for (const [tracker, keywords] of Object.entries(data)) {
+                            const li = document.createElement('li');
+                            li.className = 'activity-item';
+                            li.textContent = `${tracker}: Searching for ${keywords.join(', ')}`;
+                            activityList.appendChild(li);
+                        }
+                    }
+                })
+                .catch(error => console.error('Error fetching active trackers:', error));
+        }
+
+        function updateLogs() {
+            fetch('/active_logs')
+                .then(response => response.json())
+                .then(data => {
+                    const logsList = document.getElementById('logsList');
+                    logsList.innerHTML = '';
+                    data.forEach(log => {
+                        const div = document.createElement('div');
+                        div.className = 'log-item';
+                        div.textContent = log;
+                        logsList.appendChild(div);
+                    });
+                    logsList.scrollTop = logsList.scrollHeight; // Auto-scroll to bottom
+                })
+                .catch(error => console.error('Error fetching logs:', error));
+        }
+
+        setInterval(updateActivity, 5000);
+        setInterval(updateLogs, 2000); // Update logs more frequently
+        updateActivity();
+        updateLogs();
+    </script>
+</body>
+</html>

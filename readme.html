@@ -1,0 +1,102 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>KniteCrawler README</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #1a1a1a; color: #00ff00; font-family: 'Courier New', monospace; }
+        .navbar { background: #0d0d0d; }
+        .navbar-brand, .nav-link { color: #00ff00 !important; }
+        h1, h2, h3 { color: #00ff00; }
+        .container { max-width: 800px; }
+        .section { margin-bottom: 20px; }
+        code { background: #2a2a2a; padding: 2px 5px; border: 1px solid #00ff00; }
+        pre { background: #2a2a2a; padding: 10px; border: 1px solid #00ff00; overflow-x: auto; }
+        a { color: #00cc00; }
+        a:hover { color: #00ff00; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="/">KniteCrawler</a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="/">Dashboard</a>
+                <a class="nav-link" href="/settings">Settings</a>
+                <a class="nav-link" href="/crawl_history">Crawl History</a>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        <h1>KniteCrawler README</h1>
+        <div class="section">
+            <h2>> Overview</h2>
+            <p>KniteCrawler is a dark web and surface web intelligence tool designed to track leaks across multiple platforms, including Dread-like forums, Reddit, Telegram, Discord, and more. It uses AI for sentiment analysis and summarization, with real-time alerts via WebSockets and browser notifications.</p>
+        </div>
+        <div class="section">
+            <h2>> Features</h2>
+            <ul>
+                <li>Multi-platform tracking: Dark Web (Dread-like), 4chan, Reddit, Telegram, Discord, X, Pastebin, GitHub, XSS.is, Exploit.in, Nulled.to</li>
+                <li>Leak detection: Emails, hashes, passwords, credit cards, IPs, SSNs with weighted scoring</li>
+                <li>Google-like search UI with filters (platform, sentiment)</li>
+                <li>Real-time updates and browser notifications</li>
+                <li>Modular tracker system for easy extension</li>
+                <li>Tor integration for dark web access</li>
+                <li>Export findings as CSV</li>
+            </ul>
+        </div>
+        <div class="section">
+            <h2>> Setup</h2>
+            <p>1. Install dependencies:</p>
+            <pre>pip install flask flask-socketio requests beautifulsoup4 stem sqlite3 praw telethon discord.py transformers torch 2captcha-python</pre>
+            <p>2. Place Tor binary in <code>tor/</code> folder.</p>
+            <p>3. Run the app:</p>
+            <pre>cd /path/to/parent/of/KniteCrawler; python3 -m KniteCrawler.app</pre>
+            <p>4. Access at <a href="http://127.0.0.1:5000">http://127.0.0.1:5000</a>.</p>
+            <p>5. Configure settings at <a href="/settings">/settings</a> (e.g., API keys, dark web URLs).</p>
+        </div>
+        <div class="section">
+            <h2>> Usage</h2>
+            <p>- <strong>Dashboard</strong>: Add targets (keywords) and monitor the Intel Feed.</p>
+            <p>- <strong>Search & Filter</strong>: Use the search bar and dropdowns to refine results.</p>
+            <p>- <strong>Settings</strong>: Configure platform credentials and crawler options.</p>
+            <p>- <strong>Crawl History</strong>: View dark web crawl logs.</p>
+            <p>- <strong>Export</strong>: Download findings as CSV.</p>
+        </div>
+        <div class="section">
+            <h2>> Dark Web Tracking</h2>
+            <p>Targets Dread-like forums specified in <code>dark_web_urls</code> (comma-separated). Example:</p>
+            <pre>http://dread.onion,http://darkforum.onion</pre>
+            <p>Detects leaks with scores:</p>
+            <ul>
+                <li>Keyword: 1pt</li>
+                <li>Email: 5pt</li>
+                <li>Hash: 3pt</li>
+                <li>Password: 10pt</li>
+                <li>Credit Card: 15pt</li>
+                <li>IP: 2pt</li>
+                <li>SSN: 20pt</li>
+            </ul>
+        </div>
+        <div class="section">
+            <h2>> Extending Trackers</h2>
+            <p>Create a new tracker in <code>trackers.py</code>:</p>
+            <pre>
+class CustomTracker(BaseTracker):
+    def track(self, keyword):
+        spider = Spider(self.settings, self.settings.get('captcha_key'))
+        spider.run(keyword, "https://customsite.com", "Custom", self.emit_callback)
+            </pre>
+            <p>Register in <code>app.py</code>:</p>
+            <pre>tracker_manager.register_tracker('custom', CustomTracker)</pre>
+        </div>
+        <div class="section">
+            <h2>> Notes</h2>
+            <p>- Requires Tor for dark web access.</p>
+            <p>- Adjust <code>max_depth</code>, <code>max_urls</code>, and <code>threads</code> for performance.</p>
+            <p>- Use real .onion URLs for effective dark web tracking.</p>
+        </div>
+    </div>
+</body>
+</html>
