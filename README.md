@@ -1,6 +1,6 @@
 # KniteCrawler
 
-KniteCrawler is a powerful intelligence-gathering tool designed to monitor and analyze data across multiple platforms, including the dark web, social media, and forums. It leverages AI for sentiment analysis and summarization, supports real-time updates via WebSockets, and integrates Tor for dark web access. This project was developed with assistance from **Grok**, an AI created by xAI, which helped refine code, troubleshoot issues, and optimize functionality.
+KniteCrawler is a powerful intelligence-gathering tool designed to monitor and analyze data across multiple platforms, including the dark web, social media, and forums. It leverages AI for sentiment analysis and summarization, supports real-time updates via WebSockets, and integrates Tor for dark web access.
 
 ## Features
 - **Multi-Platform Tracking**: Monitors Dark Web (Dread-like forums), 4chan, Reddit, Telegram, Discord, X, Pastebin, GitHub, XSS.is, Exploit.in, and Nulled.to.
